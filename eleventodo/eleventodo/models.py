@@ -17,11 +17,13 @@ from zope.sqlalchemy import ZopeTransactionExtension
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-
-class MyModel(Base):
-    __tablename__ = 'models'
+class TodoItemModel(Base):
+    """This is the main model in our application. This is what powers
+    the tasks in the todo list.
+    """
+    __tablename__ = 'todoitems'
     id = Column(Integer, primary_key=True)
-    name = Column(Text)
-    value = Column(Integer)
+    task = Column(Text, nullable=False)
 
-Index('my_index', MyModel.name, unique=True, mysql_length=255)
+    def __init__(self, task):
+        self.task = task
