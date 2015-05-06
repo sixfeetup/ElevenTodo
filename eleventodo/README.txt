@@ -1,4 +1,4 @@
-pyramid_todo README
+eleventodo README
 ==================
 
 Getting Started
@@ -8,7 +8,7 @@ Getting Started
 
 - $VENV/bin/python setup.py develop
 
-- $VENV/bin/initialize_pyramid_todo_db development.ini
+- $VENV/bin/initialize_eleventodo_db development.ini
 
 - $VENV/bin/pserve development.ini
 
