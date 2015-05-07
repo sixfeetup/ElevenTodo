@@ -48,6 +48,7 @@ Install the eleventodo app::
     cd ElevenTodo/eleventodo
     mkvirtualenv eleventodo --python=python3.4
     workon eleventodo
+    pip install -r requirements.txt
     python setup.py develop
     initialize_eleventodo_db development.ini
     pserve development.ini --reload
