@@ -6,7 +6,7 @@ from pyramid import testing
 from .models import DBSession
 
 
-class TestMyViewSuccessCondition(unittest.TestCase):
+class TestTodoItemViewSuccessCondition(unittest.TestCase):
     def setUp(self):
         self.config = testing.setUp()
         from sqlalchemy import create_engine
@@ -33,7 +33,7 @@ class TestMyViewSuccessCondition(unittest.TestCase):
         self.assertEqual(info['project'], 'eleventodo')
 
 
-class TestMyViewFailureCondition(unittest.TestCase):
+class TestTodoItemViewFailureCondition(unittest.TestCase):
     def setUp(self):
         self.config = testing.setUp()
         from sqlalchemy import create_engine
