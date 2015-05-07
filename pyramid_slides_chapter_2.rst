@@ -58,10 +58,12 @@ or::
 
     cd ~/projects/
 
-Make a new directory, and change to it:
+Make a new directory, and change to it::
     
     mkdir ElevenTodo
     cd ElevenTodo
+
+Make sure your virtualenv is active. The name of the virtualenv should apper in parenteses at the start of your command prompt.
 
 ----
 
@@ -129,13 +131,13 @@ Git
 
 Let's get this newly-generated project checked in to git.
 
-Change to the new Pyramid app directory::
+Make sure we are in the Pyramid app directory::
 
-    cd C:\Users\[My Username]\Projects\eleventodo
+    cd C:\Users\[My Username]\Projects\ElevenTodo\eleventodo
 
 or::
 
-    cd ~/projects/eleventodo
+    cd ~/projects/ElevenTodo/eleventodo
 
 ----
 
@@ -150,14 +152,17 @@ Git::
 
 Install dependencies
 
-The ``pcreate`` utility made us a new ``setup.py`` file. We can tell ``pip`` to install this new package and all its dependencies.::
+Make sure your virtualenv is active. The name of the virtualenv should apper in parenteses at the start of your command prompt.
 
-    pip install -e .
+The ``pcreate`` utility made us a new ``setup.py`` file. We can use it to install this new package and all its dependencies.::
+
+    python setup.py develop
 
 .. note::
 
-    Here we are telling pip to install the current folder as an "editable" package. Pip will read the setup.py file, and install the packages that it says it requires.
+    If you use ``pip install -e .`` here, then the ``pserve development.ini --reload`` command won't work. Use ``python setup.py develop`` instead.
 
+    
 ----
 
 Initialize the database::
