@@ -13,7 +13,7 @@ from pyramid.scripts.common import parse_vars
 
 from ..models import (
     DBSession,
-    TodoItemModel,
+    TodoItem,
     Base,
     )
 
@@ -36,5 +36,7 @@ def main(argv=sys.argv):
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)
     with transaction.manager:
-        model = TodoItemModel(task='Write a ToDo app')
-        DBSession.add(model)
+        item = TodoItem(task='Write a ToDo app')
+        DBSession.add(item)
+        item = TodoItem(task='Read the documentation', closed=True)
+        DBSession.add(item)
