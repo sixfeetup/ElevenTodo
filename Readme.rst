@@ -25,19 +25,45 @@
 
 ----
 
-Chapter 1 - Hello World
-===============================================
+Overview
+====================
 
+Installation instructions:
 
-Set up the simplest possible Pyramid app
+Install Python 3.4
 
+Install virtualenv, and virtualenvwrapper (on Windows, install virtualenvwrapper-win)::
 
-Chapter 2 - Scaffolding
+    pip install virtualenv
+    
+    pip install virtualenvwrapper
+
+    -or-
+
+    pip install virtualenvwrapper-win
+
+Install the eleventodo app::
+
+    git clone git@github.com:sixfeetup/ElevenTodo.git
+    cd ElevenTodo/eleventodo
+    mkvirtualenv eleventodo --python=python3.4
+    workon eleventodo
+    python setup.py develop
+    initialize_eleventodo_db development.ini
+    pserve development.ini --reload
+
+Note: on Windows, you may need to specify the full path to Python 3.4 when making the virtualenv.::
+
+    mkvirtualenv eleventodo --python=C:\Python34\python.exe
+
+To install the final version of the app, checkout branch ``master``. Each chapter has its own branch that you can check out as well. Do ``python setup.py develop`` after each checkout.
+
+Chapter 1 - Scaffolding
 ===============================================
 
 Use the ``pcreate`` utility to set up the scaffolding for a new project using SQLAlchemy to access data.
 
-Chapter 3 - Views
+Chapter 2 - ToDo Item
 ===============================================
 
 
