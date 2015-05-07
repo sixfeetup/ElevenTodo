@@ -5,17 +5,16 @@ from sqlalchemy.exc import DBAPIError
 
 from .models import (
     DBSession,
-    MyModel,
+    TodoItemModel,
     )
 
-
-@view_config(route_name='home', renderer='templates/mytemplate.pt')
-def my_view(request):
+@view_config(route_name='home', renderer='templates/todotemplate.pt')
+def todo_item_view(request):
     try:
-        one = DBSession.query(MyModel).filter(MyModel.name == 'one').first()
+        task_one = DBSession.query(TodoItemModel).filter(TodoItemModel.id == 1).first()
     except DBAPIError:
         return Response(conn_err_msg, content_type='text/plain', status_int=500)
-    return {'one': one, 'project': 'eleventodo'}
+    return {'first_task': task_one.task, 'project': 'eleventodo'}
 
 
 conn_err_msg = """\
@@ -33,4 +32,3 @@ might be caused by one of the following things:
 After you fix the problem, please restart the Pyramid application to
 try it again.
 """
-

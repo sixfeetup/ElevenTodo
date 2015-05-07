@@ -6,19 +6,19 @@ from pyramid import testing
 from .models import DBSession
 
 
-class TestMyViewSuccessCondition(unittest.TestCase):
+class TestTodoItemViewSuccessCondition(unittest.TestCase):
     def setUp(self):
         self.config = testing.setUp()
         from sqlalchemy import create_engine
         engine = create_engine('sqlite://')
         from .models import (
             Base,
-            MyModel,
+            TodoItemModel,
             )
         DBSession.configure(bind=engine)
         Base.metadata.create_all(engine)
         with transaction.manager:
-            model = MyModel(name='one', value=55)
+            model = TodoItemModel(task='test task')
             DBSession.add(model)
 
     def tearDown(self):
@@ -26,21 +26,21 @@ class TestMyViewSuccessCondition(unittest.TestCase):
         testing.tearDown()
 
     def test_passing_view(self):
-        from .views import my_view
+        from .views import todo_item_view
         request = testing.DummyRequest()
-        info = my_view(request)
-        self.assertEqual(info['one'].name, 'one')
+        info = todo_item_view(request)
+        self.assertEqual(info['first_task'], 'test task')
         self.assertEqual(info['project'], 'eleventodo')
 
 
-class TestMyViewFailureCondition(unittest.TestCase):
+class TestTodoItemViewFailureCondition(unittest.TestCase):
     def setUp(self):
         self.config = testing.setUp()
         from sqlalchemy import create_engine
         engine = create_engine('sqlite://')
         from .models import (
             Base,
-            MyModel,
+            TodoItemModel,
             )
         DBSession.configure(bind=engine)
 
@@ -49,7 +49,7 @@ class TestMyViewFailureCondition(unittest.TestCase):
         testing.tearDown()
 
     def test_failing_view(self):
-        from .views import my_view
+        from .views import todo_item_view
         request = testing.DummyRequest()
-        info = my_view(request)
+        info = todo_item_view(request)
         self.assertEqual(info.status_int, 500)
