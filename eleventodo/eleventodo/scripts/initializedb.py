@@ -1,6 +1,7 @@
 import os
 import sys
 import transaction
+import datetime
 
 from sqlalchemy import engine_from_config
 
@@ -36,7 +37,8 @@ def main(argv=sys.argv):
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)
     with transaction.manager:
-        item = TodoItem(task='Write a ToDo app')
+        item = TodoItem(description='Write a ToDo app')
         DBSession.add(item)
-        item = TodoItem(task='Read the documentation', closed=True)
+        due_date = datetime.datetime(2015, 5, 7, 20, 48, 19, 118000)
+        item = TodoItem(description='Read the documentation', due_date=due_date)
         DBSession.add(item)

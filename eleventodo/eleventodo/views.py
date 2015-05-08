@@ -1,6 +1,8 @@
+import datetime
+
 from pyramid.response import Response
 from pyramid.view import view_config
-from pyramid.httpexceptions import HTTPFound
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 from sqlalchemy.exc import DBAPIError
 
@@ -9,70 +11,27 @@ from .models import (
     TodoItem,
     )
 
-# @view_config(route_name='home', renderer='templates/todotemplate.pt')
-# def todo_item_view(request):
-#     try:
-#         task_one = DBSession.query(TodoItem).filter(TodoItem.id == 1).first()
-#     except DBAPIError:
-#         return Response(conn_err_msg, content_type='text/plain', status_int=500)
-#     return {'first_task': task_one.task, 'project': 'eleventodo'}
-
-
-
-
-#   ======================
-# views
-@view_config(route_name='list', renderer='templates/list.pt')
-def list_view(request):
-    # rs = request.db.execute("select id, name from tasks where closed = 0")
-    rows = DBSession.query(TodoItem).filter(TodoItem.closed == 0).all()
-    tasks = [dict(id=row.id, name=row.task) for row in rows]
-    return {'tasks': tasks}
-
-
-
-# task = TodoItem(
-#     user=self.user_id,
-#     task=task_name,
-#     tags=tags,
-#     due_date=due_date,
-# )
-# task_id = captured.get('id')
-# if task_id is not None:
-#     action = 'updated'
-#     task.id = task_id
-# DBSession.merge(task)
-
-@view_config(route_name='new', renderer='templates/new.pt')
-def new_view(request):
+@view_config(route_name='add', renderer='templates/add.pt')
+def add_todo_item(request):
     if request.method == 'POST':
-        if request.POST.get('name'):
-            # request.db.execute(
-            #     'insert into tasks (name, closed) values (?, ?)',
-            #     [request.POST['name'], 0])
-            # request.db.commit()
-            new_task = TodoItem(
-                task = request.POST['name'],
-                closed = False,
+        if request.POST.get('description'):
+            if request.POST.get('due_date'):
+                due_date = request.POST['due_date']
+            else:
+                due_date = datetime.datetime.now()
+            new_todo_item = TodoItem(
+                description = request.POST['description'],
+                due_date = due_date,
             )
-            DBSession.merge(task)
-            request.session.flash('New task was successfully added!')
+            DBSession.add(new_todo_item)
+            request.session.flash('New todo item was successfully added!')
             return HTTPFound(location=request.route_url('list'))
         else:
-            request.session.flash('Please enter a name for the task!')
-    return {}
-
-
-@view_config(route_name='close')
-def close_view(request):
-    task_id = int(request.matchdict['id'])
-    item = DBSession.query(TodoItem).filter(TodoItem.id == task_id)
-    item.update({"closed" : True})
-    # request.db.execute("update tasks set closed = ? where id = ?",
-    #                    (1, task_id))
-    # request.db.commit()
-    request.session.flash('Task was successfully closed!')
-    return HTTPFound(location=request.route_url('list'))
+            request.session.flash('Please enter a description for the todo item!')
+            return HTTPNotFound()
+    else:
+        save_url = request.route_url('add')
+        return dict(save_url=save_url)
 
 
 @view_config(context='pyramid.exceptions.NotFound', renderer='templates/notfound.pt')
@@ -80,8 +39,52 @@ def notfound_view(request):
     request.response.status = '404 Not Found'
     return {}
 
-#   ======================
+@view_config(route_name='edit_todo_item', renderer='templates/edit.pt')
+def edit_todo_item(request):
+    """Get the values to fill in the edit form
+    """
+    todo_id = int(request.matchdict['id'])
+    if todo_id is None:
+        return False
+    todo_item = DBSession.query(TodoItem).filter(
+        TodoItem.id == todo_id).one()
+    if 'form.submitted' in request.params:
+        todo_item.description = request.params['description']
+        if request.POST.get('due_date'):
+            due_date = request.POST['due_date']
+        else:
+            due_date = datetime.datetime.now()
+        todo_item.due_date = due_date
+        # todo_item.due_date = None
+        DBSession.add(todo_item)
+        return HTTPFound(location = request.route_url('list'))
+    return dict(
+        todo_item=todo_item,
+        save_url = request.route_url('edit_todo_item', id=todo_id),
+        )
 
+@view_config(route_name='delete')
+def delete_todo_item(request):
+    """Delete a todo list item
+    """
+    todo_id = int(request.matchdict['id'])
+    if todo_id is not None:
+        todo_item = DBSession.query(TodoItem).filter(
+            TodoItem.id == int(todo_id))
+        todo_item.delete()
+        request.session.flash('Todo item has been deleted!')
+    return HTTPFound(location = request.route_url('list'))
+
+@view_config(route_name='list', renderer='templates/list.pt')
+def todo_item_list(request):
+    """This is the main functional page of our application. It
+    shows a listing of the todo items.
+    """
+    rows = DBSession.query(TodoItem).all()
+    todo_items = [dict(id=row.id,
+                       description=row.description,
+                       due_date=row.due_date) for row in rows]
+    return {'todo_items': rows}
 
 
 

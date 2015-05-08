@@ -5,7 +5,7 @@
 <head>
 
   <meta charset="utf-8">
-  <title>To Do Item List</title>
+  <title>New To Do Item</title>
   <link rel="stylesheet" href="/static/theme.css">
 
 </head>
@@ -14,11 +14,13 @@
 
   <div id="wrap">
     <div id="middle">
-      <ul>
-        <li tal:repeat="todo_item todo_items">
-          ${todo_item.id} - ${todo_item.description} - ${todo_item.due_date}
-        </li>
-      </ul>
+      <div>
+        <form action="${save_url}" method="post">
+          <textarea name="description" content="" rows="10" cols="60"></textarea>
+          <br/>
+          <input type="submit" name="form.submitted" value="Save"/>
+        </form>
+      </div>
     </div>
   </div>
 
