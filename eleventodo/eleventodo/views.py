@@ -21,11 +21,15 @@ def parse_post(request_post):
     """
     description = request_post['description']
     due_date = request_post.get('due_date')
-    if due_date is not None:
+    if due_date:
         due_date = datetime.datetime.strptime(due_date, date_format_string)
-    tags = request_post.get('tags', [])
+    else:
+        due_date = None
+    tags = request_post.get('tags')
     if tags:
         tags = tags.split(',')
+    else:
+        tags = []
 
     return (description, due_date, tags)
 
@@ -89,16 +93,10 @@ def edit_todo_item(request):
 
         edited_todo_item = TodoItem(
             description=description,
-            tags=tags,
             due_date=due_date,
+            tags=tags,
         )
-
         edited_todo_item.id=todo_id
-
-
-        #todo_item.description = description
-        #todo_item.due_date = due_date
-        #todo_item.tags = tags
 
         DBSession.merge(edited_todo_item)
         return HTTPFound(location=request.route_url('list'))
@@ -134,8 +132,14 @@ def todo_item_list(request):
     rows = DBSession.query(TodoItem).all()
     todo_items = [dict(id=row.id,
                        description=row.description,
-                       due_date=date_to_string(row.due_date)) for row in rows]
-    return {'todo_items': todo_items}
+                       due_date=date_to_string(row.due_date),
+                       tags=row.sorted_tags,
+                      )
+                  for row in rows
+                 ]
+    return {'todo_items': todo_items,
+            'header_text': 'All Items',
+           }
 
 @view_config(route_name='tags', renderer='templates/tags.pt')
 def tag_list(request):
@@ -144,6 +148,26 @@ def tag_list(request):
     tags = DBSession.query(Tag).all()
     return {'tags': tags}
 
+@view_config(route_name='tag', renderer='templates/list.pt',
+             permission='view')
+def tag_view(request):
+    """Very similar to the list_view, this view just filters the
+    list of tags down to the tag selected in the url based on the
+    tag route replacement marker that ends up in the `matchdict`.
+    """
+    tag_name = request.matchdict['tag_name']
+
+    #todo_items = DBSession.query(TodoItem).filter(
+    #    TodoItem.tags.any(Tag.name.in_([tag_name])))
+    todo_items = DBSession.query(TodoItem).filter(TodoItem.tags.any(Tag.name.in_([tag_name]))).all()
+
+    count = len(todo_items)
+    item_label = 'Items' if count > 1 or count == 0 else 'Item'
+    return {'todo_items': todo_items,
+            'header_text': '%s tagged %s' % (item_label,
+                                             tag_name,
+                                            ),
+           }
 
 
 

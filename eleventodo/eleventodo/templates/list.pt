@@ -13,10 +13,19 @@
 <body>
 
   <div id="wrap">
+    <div id="top">
+      <h1>${header_text}</h1>
+    </div>
     <div id="middle">
       <ul>
         <li tal:repeat="todo_item todo_items">
-          ${todo_item.id} - ${todo_item.description} - ${todo_item.due_date}
+          <span>
+            <a href="/edit/${todo_item.id}">${todo_item.id} - ${todo_item.description} - ${todo_item.due_date}</a>
+          </span>
+          <br/>
+          <span class="tag" tal:repeat="tag todo_item.tags">
+            <a href="/tags/${tag.name}">${tag.name}</a>
+          </span>
         </li>
       </ul>
     </div>
