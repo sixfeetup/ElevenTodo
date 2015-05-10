@@ -11,6 +11,7 @@
 <body>
 
   <div id="notfound">
+    <h1><a href="/">Eleven Todo</a></h1>
     <h1>404 - PAGE NOT FOUND</h1>
   </div>
 

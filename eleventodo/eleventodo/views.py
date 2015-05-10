@@ -1,10 +1,15 @@
 import datetime
 
-#from pyramid.response import Response
+from pyramid.response import Response
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
-#from sqlalchemy.exc import DBAPIError
+from deform import Form
+from deform import ValidationFailure
+
+import transaction
+
+from .schema import TodoSchema
 
 from .models import (
     DBSession,
@@ -15,23 +20,23 @@ from .models import (
 
 date_format_string = '%Y-%m-%d'
 
-def parse_post(request_post):
-    """
-    Read and normalize the values from the POST.
-    """
-    description = request_post['description']
-    due_date = request_post.get('due_date')
-    if due_date:
-        due_date = datetime.datetime.strptime(due_date, date_format_string)
-    else:
-        due_date = None
-    tags = request_post.get('tags')
-    if tags:
-        tags = tags.split(',')
-    else:
-        tags = []
-
-    return (description, due_date, tags)
+#def parse_post(request_post):
+#    """
+#    Read and normalize the values from the POST.
+#    """
+#    description = request_post['description']
+#    due_date = request_post.get('due_date')
+#    if due_date:
+#        due_date = datetime.datetime.strptime(due_date, date_format_string)
+#    else:
+#        due_date = None
+#    tags = request_post.get('tags')
+#    if tags:
+#        tags = tags.split(',')
+#    else:
+#        tags = []
+#
+#    return (description, due_date, tags)
 
 def date_to_string(date_object):
     """
@@ -43,33 +48,85 @@ def date_to_string(date_object):
     except AttributeError:
         return ""
 
+def process_todo_item_form(form, request, requested_action):
+    """This helper code processes the todo_item from that we have
+    generated from Colander and Deform.
+
+    This handles both the initial creation and subsequent edits for
+    a task.
+    """
+    try:
+        # try to validate the submitted values
+        controls = request.POST.items()
+        captured = form.validate(controls)
+        #action_result = 'created'
+        with transaction.manager:
+            tags = captured.get('tags', [])
+            if tags:
+                tags = tags.split(',')
+            due_date = captured.get('due_date')
+            description = captured.get('description')
+            task = TodoItem(
+                description=description,
+                tags=tags,
+                due_date=due_date,
+            )
+            task_id = captured.get('id')
+            if task_id is not None:
+                #action_result = 'updated'
+                task.id = task_id
+            DBSession.merge(task)
+
+        # Back to the list
+        return HTTPFound(location=request.route_url('list'))
+
+    except ValidationFailure as e:
+        # the submitted values could not be validated. Render the form with
+        # the errors highlighted.
+        return {
+            'action' : requested_action,
+            'form': e.render(),
+        }
+
+def generate_task_form(formid="deform"):
+    """This helper code generates the form that will be used to add
+    and edit the tasks based on the schema of the form.
+    """
+    schema = TodoSchema()
+    options = """
+    {success:
+      function (rText, sText, xhr, form) {
+        deform.focusFirstInput();
+        var loc = xhr.getResponseHeader('X-Relocate');
+        if (loc) {
+          document.location = loc;
+        };
+       }
+    }
+    """
+    # Unneeded deform javascript options
+    #    deform.processCallbacks();
+    return Form(
+        schema,
+        buttons=('submit',),
+        formid=formid,
+        use_ajax=True,
+        ajax_options=options,
+    )
+
+
+
+
 @view_config(route_name='add', renderer='templates/edit.pt')
 def add_todo_item(request):
-    if request.method == 'POST':
-        if request.POST.get('description'):
-            (description,
-             due_date,
-             tags,
-            ) = parse_post(request.POST)
-            new_todo_item = TodoItem(
-                description=description,
-                due_date=due_date,
-                tags=tags,
-            )
-            DBSession.add(new_todo_item)
-            request.session.flash('New todo item was successfully added!')
-            return HTTPFound(location=request.route_url('list'))
-        else:
-            request.session.flash('Please enter a description for the todo item!')
-            return HTTPNotFound()
-    else:
-        return dict(
-            description="",
-            due_date="",
-            tags="",
-            action='Add',
-            save_url=request.route_url('add'),
-            )
+    form = generate_task_form()
+    requested_action = "Add"
+    if 'submit' in request.POST:
+        return process_todo_item_form(form, request, requested_action)
+    return {
+        'action' : requested_action,
+        'form': form.render(),
+    }
 
 
 @view_config(context='pyramid.exceptions.NotFound', renderer='templates/notfound.pt')
@@ -84,33 +141,23 @@ def edit_todo_item(request):
     todo_id = int(request.matchdict['id'])
     if todo_id is None:
         return False
-    if 'form.submitted' in request.params:
+    form = generate_task_form()
+    requested_action = "Edit"
+    if 'submit' in request.POST:
         # Submit edits to database
-        (description,
-         due_date,
-         tags,
-        ) = parse_post(request.POST)
+        return process_todo_item_form(form, request, requested_action)
 
-        edited_todo_item = TodoItem(
-            description=description,
-            due_date=due_date,
-            tags=tags,
-        )
-        edited_todo_item.id=todo_id
-
-        DBSession.merge(edited_todo_item)
-        return HTTPFound(location=request.route_url('list'))
-    else:
-        # Display item for editing
-        todo_item = DBSession.query(TodoItem).filter(
-            TodoItem.id == todo_id).one()
-        return dict(
-            description=todo_item.description,
-            due_date=date_to_string(todo_item.due_date),
-            tags=','.join([tag.name for tag in todo_item.sorted_tags]),
-            action='Edit',
-            save_url=request.route_url('edit_todo_item', id=todo_id),
-            )
+    todo_item = DBSession.query(TodoItem).filter(TodoItem.id == todo_id).one()
+    form_data = {
+        'id' : todo_item.id,
+        'description': todo_item.description,
+        'due_date' : todo_item.due_date,
+        'tags' : ','.join([tag.name for tag in todo_item.sorted_tags]),
+    }
+    return {
+        'action' : requested_action,
+        'form': form.render(form_data),
+    }
 
 @view_config(route_name='delete')
 def delete_todo_item(request):
