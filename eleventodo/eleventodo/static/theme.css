@@ -25,9 +25,23 @@ a {
     border-radius: .2em;
 }
 
+a.delete {
+    /*visibility: hidden;*/
+    display: none;
+}
+
 a:hover {
     background-color: #f0f0f0;
     color: #1295C1;
+}
+
+span.list_item:hover > a.delete{
+    /*visibility: visible;*/
+    display: inline;
+}
+
+li {
+    margin-bottom: 1em;
 }
 
 span.tag{
