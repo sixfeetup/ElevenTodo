@@ -1,27 +1,56 @@
 import datetime
 
-from pyramid.response import Response
+#from pyramid.response import Response
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
-from sqlalchemy.exc import DBAPIError
+#from sqlalchemy.exc import DBAPIError
 
 from .models import (
     DBSession,
     TodoItem,
+    Tag,
     )
 
-@view_config(route_name='add', renderer='templates/add.pt')
+
+date_format_string = '%Y-%m-%d'
+
+def parse_post(request_post):
+    """
+    Read and normalize the values from the POST.
+    """
+    description = request_post['description']
+    due_date = request_post.get('due_date')
+    if due_date is not None:
+        due_date = datetime.datetime.strptime(due_date, date_format_string)
+    tags = request_post.get('tags', [])
+    if tags:
+        tags = tags.split(',')
+
+    return (description, due_date, tags)
+
+def date_to_string(date_object):
+    """
+    Return a string representation of a possible date object. If the object can not
+    be converted to a date string, returns an empty string.
+    """
+    try:
+        return date_object.strftime(date_format_string)
+    except AttributeError:
+        return ""
+
+@view_config(route_name='add', renderer='templates/edit.pt')
 def add_todo_item(request):
     if request.method == 'POST':
         if request.POST.get('description'):
-            if request.POST.get('due_date'):
-                due_date = request.POST['due_date']
-            else:
-                due_date = datetime.datetime.now()
+            (description,
+             due_date,
+             tags,
+            ) = parse_post(request.POST)
             new_todo_item = TodoItem(
-                description = request.POST['description'],
-                due_date = due_date,
+                description=description,
+                due_date=due_date,
+                tags=tags,
             )
             DBSession.add(new_todo_item)
             request.session.flash('New todo item was successfully added!')
@@ -30,8 +59,13 @@ def add_todo_item(request):
             request.session.flash('Please enter a description for the todo item!')
             return HTTPNotFound()
     else:
-        save_url = request.route_url('add')
-        return dict(save_url=save_url)
+        return dict(
+            description="",
+            due_date="",
+            tags="",
+            action='Add',
+            save_url=request.route_url('add'),
+            )
 
 
 @view_config(context='pyramid.exceptions.NotFound', renderer='templates/notfound.pt')
@@ -46,22 +80,39 @@ def edit_todo_item(request):
     todo_id = int(request.matchdict['id'])
     if todo_id is None:
         return False
-    todo_item = DBSession.query(TodoItem).filter(
-        TodoItem.id == todo_id).one()
     if 'form.submitted' in request.params:
-        todo_item.description = request.params['description']
-        if request.POST.get('due_date'):
-            due_date = request.POST['due_date']
-        else:
-            due_date = datetime.datetime.now()
-        todo_item.due_date = due_date
-        # todo_item.due_date = None
-        DBSession.add(todo_item)
-        return HTTPFound(location = request.route_url('list'))
-    return dict(
-        todo_item=todo_item,
-        save_url = request.route_url('edit_todo_item', id=todo_id),
+        # Submit edits to database
+        (description,
+         due_date,
+         tags,
+        ) = parse_post(request.POST)
+
+        edited_todo_item = TodoItem(
+            description=description,
+            tags=tags,
+            due_date=due_date,
         )
+
+        edited_todo_item.id=todo_id
+
+
+        #todo_item.description = description
+        #todo_item.due_date = due_date
+        #todo_item.tags = tags
+
+        DBSession.merge(edited_todo_item)
+        return HTTPFound(location=request.route_url('list'))
+    else:
+        # Display item for editing
+        todo_item = DBSession.query(TodoItem).filter(
+            TodoItem.id == todo_id).one()
+        return dict(
+            description=todo_item.description,
+            due_date=date_to_string(todo_item.due_date),
+            tags=','.join([tag.name for tag in todo_item.sorted_tags]),
+            action='Edit',
+            save_url=request.route_url('edit_todo_item', id=todo_id),
+            )
 
 @view_config(route_name='delete')
 def delete_todo_item(request):
@@ -73,7 +124,7 @@ def delete_todo_item(request):
             TodoItem.id == int(todo_id))
         todo_item.delete()
         request.session.flash('Todo item has been deleted!')
-    return HTTPFound(location = request.route_url('list'))
+    return HTTPFound(location=request.route_url('list'))
 
 @view_config(route_name='list', renderer='templates/list.pt')
 def todo_item_list(request):
@@ -83,8 +134,15 @@ def todo_item_list(request):
     rows = DBSession.query(TodoItem).all()
     todo_items = [dict(id=row.id,
                        description=row.description,
-                       due_date=row.due_date) for row in rows]
-    return {'todo_items': rows}
+                       due_date=date_to_string(row.due_date)) for row in rows]
+    return {'todo_items': todo_items}
+
+@view_config(route_name='tags', renderer='templates/tags.pt')
+def tag_list(request):
+    """This page lists the tags in the application.
+    """
+    tags = DBSession.query(Tag).all()
+    return {'tags': tags}
 
 
 

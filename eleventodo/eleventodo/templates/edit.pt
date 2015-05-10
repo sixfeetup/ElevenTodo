@@ -5,7 +5,7 @@
 <head>
 
   <meta charset="utf-8">
-  <title>Edit To Do Item</title>
+  <title>${action} To Do Item</title>
   <link rel="stylesheet" href="/static/theme.css">
 
 </head>
@@ -13,11 +13,26 @@
 <body>
 
   <div id="wrap">
+    <div id="Top">
+      <div>
+        <h1>${action} To Do Item</h1>
+      </div>
+    </div>
     <div id="middle">
       <div>
         <form action="${save_url}" method="post">
-          <textarea name="description" tal:content="todo_item.description" rows="10"
-                    cols="60"/><br/>
+          <span>Description</span>
+          <br/>
+          <textarea name="description" tal:content="description" rows="10" cols="60"/>
+          <br/>
+          <span>Tags - comma separated</span>
+          <br/>
+          <textarea name="tags" tal:content="tags" rows="1" cols="60"/>
+          <br/>
+          <span>Due Date - YYYY-MM-DD</span>
+          <br/>
+          <textarea name="due_date" tal:content="due_date" rows="1" cols="60"/>
+          <br/>
           <input type="submit" name="form.submitted" value="Save"/>
         </form>
       </div>
