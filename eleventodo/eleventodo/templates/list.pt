@@ -22,7 +22,7 @@
         <li tal:repeat="todo_item todo_items">
           <span class="list_item">
             <a href="/edit/${todo_item.id}">${todo_item.id} - ${todo_item.description} - ${todo_item.due_date}</a>
-            <a class="delete" href="/delete/${todo_item.id}">Delete</a>
+            <a class="delete font-semi-bold" href="/delete/${todo_item.id}">Delete</a>
           </span>
           <br/>
           <span class="tag" tal:repeat="tag todo_item.tags">
