@@ -5,6 +5,7 @@ from colander import Integer
 from colander import DateTime
 from deform.widget import HiddenWidget
 from deform.widget import SelectWidget
+from deform.widget import DatePartsWidget
 
 
 
@@ -23,5 +24,6 @@ class TodoSchema(MappingSchema):
     )
     due_date = SchemaNode(
         DateTime(),
+        widget = DatePartsWidget(),
         missing=None,
     )

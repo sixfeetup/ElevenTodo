@@ -7,9 +7,6 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>${action} To Do Item</title>
 
-  <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
-        href="${request.static_url('eleventodo:static/theme.css')}" />
-
   <!-- Deform CSS -->
   <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
         href="${request.static_url('deform:static/css/form.css')}" />
@@ -17,6 +14,10 @@
   <!-- Deform JavaScript -->
   <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
   <script src="${request.static_url('deform:static/scripts/deform.js')}"></script>
+
+  <!-- CSS for our app -->
+  <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
+        href="${request.static_url('eleventodo:static/theme.css')}" />
 
 </head>
 

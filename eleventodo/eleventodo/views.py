@@ -48,7 +48,7 @@ def date_to_string(date_object):
     except AttributeError:
         return ""
 
-def process_todo_item_form(form, request):
+def process_todo_item_form(form, request, requested_action):
     """This helper code processes the todo_item from that we have
     generated from Colander and Deform.
 
@@ -59,7 +59,7 @@ def process_todo_item_form(form, request):
         # try to validate the submitted values
         controls = request.POST.items()
         captured = form.validate(controls)
-        action = 'created'
+        #action_result = 'created'
         with transaction.manager:
             tags = captured.get('tags', [])
             if tags:
@@ -73,31 +73,20 @@ def process_todo_item_form(form, request):
             )
             task_id = captured.get('id')
             if task_id is not None:
-                action = 'updated'
+                #action_result = 'updated'
                 task.id = task_id
             DBSession.merge(task)
 
         # Back to the list
         return HTTPFound(location=request.route_url('list'))
 
-        #msg = "To Do Item <b><i>%s</i></b> %s successfully" % (description, action)
-        #request.session.flash(msg, queue='success')
-        ## Reload the page we were on
-        #location = request.url
-        #return Response(
-        #    '',
-        #    headers=[
-        #        ('X-Relocate', location),
-        #        ('Content-Type', 'text/html'),
-        #    ]
-        #)
-
-        #html = form.render({})
-
     except ValidationFailure as e:
-        # the submitted values could not be validated
-        #html = e.render()
-        return Response(e.render())
+        # the submitted values could not be validated. Render the form with
+        # the errors highlighted.
+        return {
+            'action' : requested_action,
+            'form': e.render(),
+        }
 
 def generate_task_form(formid="deform"):
     """This helper code generates the form that will be used to add
@@ -130,12 +119,12 @@ def generate_task_form(formid="deform"):
 
 @view_config(route_name='add', renderer='templates/edit.pt')
 def add_todo_item(request):
-
     form = generate_task_form()
+    requested_action = "Add"
     if 'submit' in request.POST:
-        return process_todo_item_form(form, request)
+        return process_todo_item_form(form, request, requested_action)
     return {
-        'action' : 'Add',
+        'action' : requested_action,
         'form': form.render(),
     }
 
@@ -152,33 +141,22 @@ def edit_todo_item(request):
     todo_id = int(request.matchdict['id'])
     if todo_id is None:
         return False
-    if 'form.submitted' in request.params:
+    form = generate_task_form()
+    requested_action = "Edit"
+    if 'submit' in request.POST:
         # Submit edits to database
-        (description,
-         due_date,
-         tags,
-        ) = parse_post(request.POST)
+        return process_todo_item_form(form, request, requested_action)
 
-        edited_todo_item = TodoItem(
-            description=description,
-            due_date=due_date,
-            tags=tags,
-        )
-        edited_todo_item.id=todo_id
-
-        DBSession.merge(edited_todo_item)
-        return HTTPFound(location=request.route_url('list'))
-    else:
-        # Display item for editing
-        todo_item = DBSession.query(TodoItem).filter(
-            TodoItem.id == todo_id).one()
-        return dict(
-            description=todo_item.description,
-            due_date=date_to_string(todo_item.due_date),
-            tags=','.join([tag.name for tag in todo_item.sorted_tags]),
-            action='Edit',
-            save_url=request.route_url('edit_todo_item', id=todo_id),
-            )
+    todo_item = DBSession.query(TodoItem).filter(TodoItem.id == todo_id).one()
+    form_data = {
+        'description': todo_item.description,
+        'due_date' : todo_item.due_date,
+        'tags' : ','.join([tag.name for tag in todo_item.sorted_tags]),
+    }
+    return {
+        'action' : requested_action,
+        'form': form.render(form_data),
+    }
 
 @view_config(route_name='delete')
 def delete_todo_item(request):
