@@ -1,10 +1,13 @@
 import datetime
 
-#from pyramid.response import Response
+from pyramid.response import Response
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 from deform import Form
+from deform import ValidationFailure
+
+import transaction
 
 from .schema import TodoSchema
 
@@ -45,7 +48,7 @@ def date_to_string(date_object):
     except AttributeError:
         return ""
 
-def process_todo_item_form(form):
+def process_todo_item_form(form, request):
     """This helper code processes the todo_item from that we have
     generated from Colander and Deform.
 
@@ -73,22 +76,28 @@ def process_todo_item_form(form):
                 action = 'updated'
                 task.id = task_id
             DBSession.merge(task)
-        msg = "Task <b><i>%s</i></b> %s successfully" % (task_name, action)
-        request.session.flash(msg, queue='success')
-        # Reload the page we were on
-        location = request.url
-        return Response(
-            '',
-            headers=[
-                ('X-Relocate', location),
-                ('Content-Type', 'text/html'),
-            ]
-        )
-        html = form.render({})
+
+        # Back to the list
+        return HTTPFound(location=request.route_url('list'))
+
+        #msg = "To Do Item <b><i>%s</i></b> %s successfully" % (description, action)
+        #request.session.flash(msg, queue='success')
+        ## Reload the page we were on
+        #location = request.url
+        #return Response(
+        #    '',
+        #    headers=[
+        #        ('X-Relocate', location),
+        #        ('Content-Type', 'text/html'),
+        #    ]
+        #)
+
+        #html = form.render({})
+
     except ValidationFailure as e:
         # the submitted values could not be validated
-        html = e.render()
-    return Response(html)
+        #html = e.render()
+        return Response(e.render())
 
 def generate_task_form(formid="deform"):
     """This helper code generates the form that will be used to add
@@ -124,16 +133,10 @@ def add_todo_item(request):
 
     form = generate_task_form()
     if 'submit' in request.POST:
-        return self.process_task_form(form)
-    css_resources, js_resources = self.form_resources(form)
+        return process_todo_item_form(form, request)
     return {
         'action' : 'Add',
-        'save_url' : request.route_url('add'),
-
         'form': form.render(),
-        'css_resources': css_resources,
-        'js_resources': js_resources,
-
     }
 
 

@@ -7,13 +7,16 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>${action} To Do Item</title>
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="/static/css/form.css" type="text/css" />
-  <!-- JavaScript -->
-  <script type="text/javascript"
-          src="/static/scripts/jquery-1.4.2.min.js"></script>
-  <script type="text/javascript"
-          src="/static/scripts/deform.js"></script>
+  <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
+        href="${request.static_url('eleventodo:static/theme.css')}" />
+
+  <!-- Deform CSS -->
+  <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
+        href="${request.static_url('deform:static/css/form.css')}" />
+
+  <!-- Deform JavaScript -->
+  <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
+  <script src="${request.static_url('deform:static/scripts/deform.js')}"></script>
 
 </head>
 
@@ -27,28 +30,9 @@
       </div>
     </div>
     <div id="middle">
-      <!--<div class="modal-body">-->
       <div>
         <tal:form replace="structure form" />
       </div>
-
-      <!--<div>-->
-      <!--  <form action="${save_url}" method="post">-->
-      <!--    <span>Description</span>-->
-      <!--    <br/>-->
-      <!--    <textarea name="description" tal:content="description" rows="10" cols="60"/>-->
-      <!--    <br/>-->
-      <!--    <span>Tags - comma separated</span>-->
-      <!--    <br/>-->
-      <!--    <textarea name="tags" tal:content="tags" rows="1" cols="60"/>-->
-      <!--    <br/>-->
-      <!--    <span>Due Date - YYYY-MM-DD</span>-->
-      <!--    <br/>-->
-      <!--    <textarea name="due_date" tal:content="due_date" rows="1" cols="60"/>-->
-      <!--    <br/>-->
-      <!--    <input type="submit" name="form.submitted" value="Save"/>-->
-      <!--  </form>-->
-      <!--</div>-->
     </div>
   </div>
 
