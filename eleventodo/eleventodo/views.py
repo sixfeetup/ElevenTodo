@@ -4,7 +4,9 @@ import datetime
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
-#from sqlalchemy.exc import DBAPIError
+from deform import Form
+
+from .schema import TodoSchema
 
 from .models import (
     DBSession,
@@ -15,23 +17,23 @@ from .models import (
 
 date_format_string = '%Y-%m-%d'
 
-def parse_post(request_post):
-    """
-    Read and normalize the values from the POST.
-    """
-    description = request_post['description']
-    due_date = request_post.get('due_date')
-    if due_date:
-        due_date = datetime.datetime.strptime(due_date, date_format_string)
-    else:
-        due_date = None
-    tags = request_post.get('tags')
-    if tags:
-        tags = tags.split(',')
-    else:
-        tags = []
-
-    return (description, due_date, tags)
+#def parse_post(request_post):
+#    """
+#    Read and normalize the values from the POST.
+#    """
+#    description = request_post['description']
+#    due_date = request_post.get('due_date')
+#    if due_date:
+#        due_date = datetime.datetime.strptime(due_date, date_format_string)
+#    else:
+#        due_date = None
+#    tags = request_post.get('tags')
+#    if tags:
+#        tags = tags.split(',')
+#    else:
+#        tags = []
+#
+#    return (description, due_date, tags)
 
 def date_to_string(date_object):
     """
@@ -43,33 +45,107 @@ def date_to_string(date_object):
     except AttributeError:
         return ""
 
+def form_resources(form):
+    """Get a list of css and javascript resources for a given form.
+    These are then used to place the resources in the global layout.
+    """
+    resources = form.get_widget_resources()
+    js_resources = resources['js']
+    css_resources = resources['css']
+    js_links = ['deform:static/%s' % r for r in js_resources]
+    css_links = ['deform:static/%s' % r for r in css_resources]
+    return (css_links, js_links)
+
+def process_todo_item_form(form):
+    """This helper code processes the todo_item from that we have
+    generated from Colander and Deform.
+
+    This handles both the initial creation and subsequent edits for
+    a task.
+    """
+    try:
+        # try to validate the submitted values
+        controls = request.POST.items()
+        captured = form.validate(controls)
+        action = 'created'
+        with transaction.manager:
+            tags = captured.get('tags', [])
+            if tags:
+                tags = tags.split(',')
+            due_date = captured.get('due_date')
+            description = captured.get('description')
+            task = TodoItem(
+                description=description,
+                tags=tags,
+                due_date=due_date,
+            )
+            task_id = captured.get('id')
+            if task_id is not None:
+                action = 'updated'
+                task.id = task_id
+            DBSession.merge(task)
+        msg = "Task <b><i>%s</i></b> %s successfully" % (task_name, action)
+        request.session.flash(msg, queue='success')
+        # Reload the page we were on
+        location = request.url
+        return Response(
+            '',
+            headers=[
+                ('X-Relocate', location),
+                ('Content-Type', 'text/html'),
+            ]
+        )
+        html = form.render({})
+    except ValidationFailure as e:
+        # the submitted values could not be validated
+        html = e.render()
+    return Response(html)
+
+def generate_task_form(formid="deform"):
+    """This helper code generates the form that will be used to add
+    and edit the tasks based on the schema of the form.
+    """
+    schema = TodoSchema()
+    options = """
+    {success:
+      function (rText, sText, xhr, form) {
+        deform.focusFirstInput();
+        var loc = xhr.getResponseHeader('X-Relocate');
+        if (loc) {
+          document.location = loc;
+        };
+       }
+    }
+    """
+    # Unneeded deform javascript options
+    #    deform.processCallbacks();
+    return Form(
+        schema,
+        buttons=('submit',),
+        formid=formid,
+        use_ajax=True,
+        ajax_options=options,
+    )
+
+
+
+
 @view_config(route_name='add', renderer='templates/edit.pt')
 def add_todo_item(request):
-    if request.method == 'POST':
-        if request.POST.get('description'):
-            (description,
-             due_date,
-             tags,
-            ) = parse_post(request.POST)
-            new_todo_item = TodoItem(
-                description=description,
-                due_date=due_date,
-                tags=tags,
-            )
-            DBSession.add(new_todo_item)
-            request.session.flash('New todo item was successfully added!')
-            return HTTPFound(location=request.route_url('list'))
-        else:
-            request.session.flash('Please enter a description for the todo item!')
-            return HTTPNotFound()
-    else:
-        return dict(
-            description="",
-            due_date="",
-            tags="",
-            action='Add',
-            save_url=request.route_url('add'),
-            )
+
+    form = generate_task_form()
+    if 'submit' in request.POST:
+        return self.process_task_form(form)
+    css_resources, js_resources = self.form_resources(form)
+    return {
+        'action' : 'Add',
+        'save_url' : request.route_url('add'),
+
+        'form': form.render(),
+        'css_resources': css_resources,
+        'js_resources': js_resources,
+
+    }
 
 
 @view_config(context='pyramid.exceptions.NotFound', renderer='templates/notfound.pt')

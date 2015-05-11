@@ -17,6 +17,7 @@ requires = [
     'transaction',
     'zope.sqlalchemy',
     'waitress',
+    'deform<=0.9.99',
     ]
 
 setup(name='eleventodo',

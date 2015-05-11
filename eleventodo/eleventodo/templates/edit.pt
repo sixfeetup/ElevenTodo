@@ -4,9 +4,28 @@
       xmlns:tal="http://xml.zope.org/namespaces/tal">
 <head>
 
-  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>${action} To Do Item</title>
-  <link rel="stylesheet" href="/static/theme.css">
+
+
+  <!-- Generated resources -->
+  <tal:resources repeat="css_path css_resources | []">
+    <link rel="stylesheet" media="screen" type="text/css"
+          tal:attributes="href python: request.static_url(css_path)" />
+  </tal:resources>
+
+  <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
+        href="${request.static_url('eleventodo:static/theme.css')}" />
+
+  <!-- Javascript, which unfortunately has to be at the top for Deform to work -->
+  <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
+  <script src="${request.static_url('deform:static/scripts/deform.js')}"></script>
+
+  <!-- Generated Resources -->
+  <tal:resources repeat="js_path js_resources | []">
+      <script type="text/javascript"
+              tal:attributes="src request.static_url(js_path)"></script>
+  </tal:resources>
 
 </head>
 
@@ -20,25 +39,34 @@
       </div>
     </div>
     <div id="middle">
+      <!--<div class="modal-body">-->
       <div>
-        <form action="${save_url}" method="post">
-          <span>Description</span>
-          <br/>
-          <textarea name="description" tal:content="description" rows="10" cols="60"/>
-          <br/>
-          <span>Tags - comma separated</span>
-          <br/>
-          <textarea name="tags" tal:content="tags" rows="1" cols="60"/>
-          <br/>
-          <span>Due Date - YYYY-MM-DD</span>
-          <br/>
-          <textarea name="due_date" tal:content="due_date" rows="1" cols="60"/>
-          <br/>
-          <input type="submit" name="form.submitted" value="Save"/>
-        </form>
+        <tal:form replace="structure form" />
       </div>
+
+      <!--<div>-->
+      <!--  <form action="${save_url}" method="post">-->
+      <!--    <span>Description</span>-->
+      <!--    <br/>-->
+      <!--    <textarea name="description" tal:content="description" rows="10" cols="60"/>-->
+      <!--    <br/>-->
+      <!--    <span>Tags - comma separated</span>-->
+      <!--    <br/>-->
+      <!--    <textarea name="tags" tal:content="tags" rows="1" cols="60"/>-->
+      <!--    <br/>-->
+      <!--    <span>Due Date - YYYY-MM-DD</span>-->
+      <!--    <br/>-->
+      <!--    <textarea name="due_date" tal:content="due_date" rows="1" cols="60"/>-->
+      <!--    <br/>-->
+      <!--    <input type="submit" name="form.submitted" value="Save"/>-->
+      <!--  </form>-->
+      <!--</div>-->
     </div>
   </div>
+
+  <script type="text/javascript">
+     deform.load()
+  </script>
 
 </body>
 </html>
