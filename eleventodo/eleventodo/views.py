@@ -149,6 +149,7 @@ def edit_todo_item(request):
 
     todo_item = DBSession.query(TodoItem).filter(TodoItem.id == todo_id).one()
     form_data = {
+        'id' : todo_item.id,
         'description': todo_item.description,
         'due_date' : todo_item.due_date,
         'tags' : ','.join([tag.name for tag in todo_item.sorted_tags]),
