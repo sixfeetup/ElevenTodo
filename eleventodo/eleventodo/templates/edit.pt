@@ -7,25 +7,13 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>${action} To Do Item</title>
 
-
-  <!-- Generated resources -->
-  <tal:resources repeat="css_path css_resources | []">
-    <link rel="stylesheet" media="screen" type="text/css"
-          tal:attributes="href python: request.static_url(css_path)" />
-  </tal:resources>
-
-  <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
-        href="${request.static_url('eleventodo:static/theme.css')}" />
-
-  <!-- Javascript, which unfortunately has to be at the top for Deform to work -->
-  <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
-  <script src="${request.static_url('deform:static/scripts/deform.js')}"></script>
-
-  <!-- Generated Resources -->
-  <tal:resources repeat="js_path js_resources | []">
-      <script type="text/javascript"
-              tal:attributes="src request.static_url(js_path)"></script>
-  </tal:resources>
+  <!-- CSS -->
+  <link rel="stylesheet" href="/static/css/form.css" type="text/css" />
+  <!-- JavaScript -->
+  <script type="text/javascript"
+          src="/static/scripts/jquery-1.4.2.min.js"></script>
+  <script type="text/javascript"
+          src="/static/scripts/deform.js"></script>
 
 </head>
 

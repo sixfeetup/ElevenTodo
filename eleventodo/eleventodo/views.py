@@ -45,17 +45,6 @@ def date_to_string(date_object):
     except AttributeError:
         return ""
 
-def form_resources(form):
-    """Get a list of css and javascript resources for a given form.
-    These are then used to place the resources in the global layout.
-    """
-    resources = form.get_widget_resources()
-    js_resources = resources['js']
-    css_resources = resources['css']
-    js_links = ['deform:static/%s' % r for r in js_resources]
-    css_links = ['deform:static/%s' % r for r in css_resources]
-    return (css_links, js_links)
-
 def process_todo_item_form(form):
     """This helper code processes the todo_item from that we have
     generated from Colander and Deform.
