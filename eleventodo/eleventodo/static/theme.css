@@ -2,8 +2,7 @@
 body {
   font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 300;
-  color: #ffffff;
-  background: #bc2131;
+  padding-top: 60px;
 }
 h1,
 h2,
@@ -28,11 +27,6 @@ a {
 a.delete {
     /*visibility: hidden;*/
     display: none;
-}
-
-a:hover {
-    background-color: #f0f0f0;
-    color: #1295C1;
 }
 
 span.list_item:hover > a.delete{
