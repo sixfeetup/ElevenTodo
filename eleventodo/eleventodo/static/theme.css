@@ -2,8 +2,7 @@
 body {
   font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-weight: 300;
-  color: #ffffff;
-  background: #bc2131;
+  padding-top: 60px;
 }
 h1,
 h2,
@@ -30,11 +29,6 @@ a.delete {
     display: none;
 }
 
-a:hover {
-    background-color: #f0f0f0;
-    color: #1295C1;
-}
-
 span.list_item:hover > a.delete{
     /*visibility: visible;*/
     display: inline;
@@ -59,9 +53,3 @@ span.tag{
   font-weight: 700;
 }
 
-.deform .errorLi {
-    border: 1px solid blue;
-}
-.deform li.error label.desc, .deform p.error, .deform h3.errorMsgLbl {
-    color: #aaaadf;
-}
