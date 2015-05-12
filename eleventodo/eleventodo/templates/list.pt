@@ -6,33 +6,63 @@
 
   <meta charset="utf-8">
   <title>To Do Item List</title>
+  <link rel="shortcut icon" href="static/favicon.ico" />
   <link rel="stylesheet" href="/static/theme.css">
+  <link rel="stylesheet" href="/static/deform_bootstrap.css">
 
 </head>
 
 <body>
+  
+  <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <a class="brand" href="${request.application_url}">Eleven ToDo</a>
+      </div>
+    </div>
+  </div>
+    
+  <div class="container">
 
-  <div id="wrap">
-    <div id="top">
-      <h1>${header_text}</h1>
-    </div>
-    <div id="middle">
-      <ul>
-        <li tal:repeat="todo_item todo_items">
-          <span class="list_item">
-            <a href="/edit/${todo_item.id}">${todo_item.id} - ${todo_item.description} - ${todo_item.due_date}</a>
-            <a class="delete" href="/delete/${todo_item.id}">Delete</a>
-          </span>
-          <br/>
-          <span class="tag" tal:repeat="tag todo_item.tags">
-            <a href="/tags/${tag.name}">${tag.name}</a>
-          </span>
-        </li>
-      </ul>
-    </div>
-    <div id="bottom">
-      <h2><a href="/add">Add new item</a></h2>
-    </div>
+      <div class="page-header">
+        <h1>Todo List </h1>
+      </div>
+      
+      <a href="/add" class="btn btn-success">Add new item</a>
+      
+      <p tal:condition="not todo_items">
+        You have finished <b>all</b> of your tasks!
+      </p>
+      
+      <table class="table table-striped" tal:condition="todo_items">
+          <thead>
+              <tr>
+                  <th>Task</th>
+                  <th>Tags</th>
+                  <th>Due Date</th>
+                  <th>&nbsp;</th>
+              </tr>
+          </thead>
+          <tbody>
+              <tr tal:repeat="todo_item todo_items">
+                  <td><a href="/edit/${todo_item.id}">${todo_item.description}</a></td>
+                  <td>
+                      <span class="tag" tal:repeat="tag todo_item.tags">
+                          <a href="/tags/${tag.name}" class="label label-info">
+                              ${tag.name}
+                          </a>
+                      </span>
+                  </td>
+                  <td>
+                      <span class="due-date badge"
+                            tal:condition="todo_item.due_date">
+                          ${todo_item.due_date}
+                      </span>
+                  </td>
+                  <td><a class="font-semi-bold" href="/delete/${todo_item.id}">Delete</a></td>
+              </tr>
+          </tbody>
+      </table>
   </div>
 
 </body>
